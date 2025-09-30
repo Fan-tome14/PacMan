@@ -1,20 +1,20 @@
-# Space Shooter
+# Pac Man
 
-Ce projet a été réalisé en groupe dans le cadre du **Travail Pratique 1 (TP1)** du cours **Programmation avec des moteurs de jeu**, offert à l’**Université du Québec à Chicoutimi (UQAC)**.
+Ce projet a été réalisé en groupe dans le cadre du **Travail Pratique 2 (TP2)** du cours **PIntelligence artificielle pour le jeu vidéo**, offert à l’**Université du Québec à Chicoutimi (UQAC)**.
 
 ---
 
-- **Titre du projet :** Space Shooter  
-- **Date de réalisation :** 20 septembre 2025  
-- **Type de projet :** Travail individuel  
+- **Titre du projet :** Pac Man 
+- **Date de réalisation :** 19 Octobre 2025  
+- **Type de projet :** Travail de binôme
 - **Moteur de développement :** Unreal Engine
 
 ---
 
 ## Objectif du projet
 
-L’objectif de ce travail était de concevoir et de développer un **jeu de type Space Shooter** utilisant le moteur **Unreal Engine**.  
-Le projet constitue une mise en pratique des compétences en développement de jeux vidéo vues dans le TP1, avec un accent sur la programmation des mécaniques de jeu et la gestion des interactions.
+L’objectif de ce travail était de concevoir et de développer un **jeu de type Pac Man** utilisant le moteur **Unreal Engine**.  
+C’est un jeu de type Pac-Man développé sur Unreal Engine, où le joueur incarne Pac-Man poursuivi par 4 intelligences artificielles, chacune représentée par les célèbres fantômes du jeu original.
 
 ---
 
