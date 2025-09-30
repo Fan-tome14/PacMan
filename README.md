@@ -43,4 +43,4 @@ Afin d’obtenir un exécutable **(.exe)**, il est nécessaire d’utiliser la f
 ## Remarque
 
 Ce projet a été développé exclusivement dans un but académique et ne constitue pas un produit fini.  
-Il s’agit d’une **preuve de concept** visant à mettre en application les principes de base du développement de jeux vidéo, avec un gameplay de type Space Shooter.
+Il s’agit d’une **preuve de concept** visant à mettre en application les principes de base du développement de jeux vidéo, avec un gameplay de type Pac Man.
