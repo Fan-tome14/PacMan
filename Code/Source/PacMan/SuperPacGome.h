@@ -13,6 +13,6 @@ UCLASS()
 class PACMAN_API ASuperPacGome : public AMangeable
 {
 	GENERATED_BODY()
-protected:
+public:
 	virtual void OnEaten() override;
 };

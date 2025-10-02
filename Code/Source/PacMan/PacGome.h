@@ -14,6 +14,6 @@ class PACMAN_API APacGome : public AMangeable
 {
 	GENERATED_BODY()
 
-protected:
+public:
 	virtual void OnEaten() override;
 };

@@ -9,7 +9,7 @@ void ASuperPacGome::OnEaten()
 {
 	if (UMyGameInstance* GI = Cast<UMyGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
 	{
-		GI->AddScore(10);
+		GI->AddScore(100);
 	}
 	//PacMan->ActivateSuperMode();
 }

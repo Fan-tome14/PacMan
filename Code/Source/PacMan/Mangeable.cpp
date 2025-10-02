@@ -56,11 +56,13 @@ void AMangeable::OnOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Oth
 		if (APacGome* Gomme = Cast<APacGome>(this))
 		{
 			UE_LOG(LogTemp, Warning, TEXT("PacMan a mangé une Gomme normale !"));
+			Gomme->OnEaten();
 		}
 		// Si c’est un Super Pack
 		else if (ASuperPacGome* Super = Cast<ASuperPacGome>(this))
 		{
 			UE_LOG(LogTemp, Warning, TEXT("PacMan a mangé un Super Pack !"));
+			Super->OnEaten();
 		}
 		Destroy();
 	}
