@@ -26,6 +26,12 @@ public:
 	UPROPERTY(BlueprintReadWrite, Category = "Game Data")
 	int32 PiecesEaten;
 
+	UPROPERTY(BlueprintReadWrite, Category = "Game Data")
+	bool bIsWinner = false;
+
+	// Appelée à chaque fois qu'une pac-gomme est mangée
+	void OnPieceEaten();
+
 	UFUNCTION(BlueprintCallable, Category = "Game Data")
 	void AddScore(int32 Amount);
 
@@ -34,13 +40,6 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Game Data")
 	void ResetGame();
-
-	UPROPERTY(BlueprintReadWrite, Category = "Game Data")
-	bool bIsWinner = false;
-
-	// Appelée à chaque fois qu'une pac-gomme est mangée
-	void OnPieceEaten();
-
 
 
 };
