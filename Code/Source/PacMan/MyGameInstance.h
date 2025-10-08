@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -14,25 +12,29 @@ class PACMAN_API UMyGameInstance : public UGameInstance
 public:
 	UMyGameInstance();
 
-	// Score actuel du joueur
-	UPROPERTY(BlueprintReadWrite, Category="Game Data")
+	UPROPERTY(BlueprintReadWrite, Category = "Game Data")
 	int32 CurrentScore;
 
-	// Nombre de vies restantes
-	UPROPERTY(BlueprintReadWrite, Category="Game Data")
+	UPROPERTY(BlueprintReadWrite, Category = "Game Data")
 	int32 Lives;
 
-	// --- Fonctions utilitaires ---
+	// Nombre total de pac-gommes (classiques + super)
+	UPROPERTY(BlueprintReadWrite, Category = "Game Data")
+	int32 TotalPieces;
 
-	// Ajoute du score
-	UFUNCTION(BlueprintCallable, Category="Game Data")
+	// Nombre de pac-gommes mangées
+	UPROPERTY(BlueprintReadWrite, Category = "Game Data")
+	int32 PiecesEaten;
+
+	UFUNCTION(BlueprintCallable, Category = "Game Data")
 	void AddScore(int32 Amount);
 
-	// Enlève une vie
-	UFUNCTION(BlueprintCallable, Category="Game Data")
+	UFUNCTION(BlueprintCallable, Category = "Game Data")
 	void LoseLife();
 
-	// Reset des données (nouvelle partie)
-	UFUNCTION(BlueprintCallable, Category="Game Data")
+	UFUNCTION(BlueprintCallable, Category = "Game Data")
 	void ResetGame();
+
+	// Appelée à chaque fois qu'une pac-gomme est mangée
+	void OnPieceEaten();
 };

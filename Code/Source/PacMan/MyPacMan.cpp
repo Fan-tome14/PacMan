@@ -4,6 +4,8 @@
 #include "Engine/World.h"
 #include "Piece.h"
 #include "UObject/ConstructorHelpers.h"
+#include "Kismet/GameplayStatics.h"
+#include "MyGameInstance.h"
 
 AMyPacMan::AMyPacMan()
 {
@@ -12,9 +14,6 @@ AMyPacMan::AMyPacMan()
 	CollisionPacMan = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxCollision"));
 	CollisionPacMan->SetBoxExtent(FVector(85.f, 85.f, 85.f));
 	CollisionPacMan->SetCollisionProfileName(TEXT("Pawn"));
-	CollisionPacMan->SetSimulatePhysics(false);
-	CollisionPacMan->SetCanEverAffectNavigation(false);
-	CollisionPacMan->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	SetRootComponent(CollisionPacMan);
 
 	ComposantMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
@@ -48,19 +47,14 @@ void AMyPacMan::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	if (!DirectionCourante.IsZero() && PeutAller(DirectionCourante))
-	{
 		AddMovementInput(DirectionCourante, 1.f);
-	}
 	else
-	{
 		DirectionCourante = FVector::ZeroVector;
-	}
 }
 
 void AMyPacMan::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
 	PlayerInputComponent->BindAxis("MoveForward", this, &AMyPacMan::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &AMyPacMan::MoveRight);
 }
@@ -71,9 +65,7 @@ void AMyPacMan::MoveForward(float Value)
 	{
 		FVector Dir = FVector::ForwardVector * FMath::Sign(Value);
 		if (PeutAller(Dir))
-		{
 			DirectionCourante = Dir;
-		}
 	}
 }
 
@@ -83,9 +75,7 @@ void AMyPacMan::MoveRight(float Value)
 	{
 		FVector Dir = FVector::RightVector * FMath::Sign(Value);
 		if (PeutAller(Dir))
-		{
 			DirectionCourante = Dir;
-		}
 	}
 }
 
@@ -94,26 +84,26 @@ bool AMyPacMan::PeutAller(FVector Direction)
 	FHitResult Hit;
 	FVector Start = GetActorLocation();
 	FVector End = Start + Direction * 100.f;
-
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(this);
 
-	bool bHit = GetWorld()->LineTraceSingleByChannel(
-		Hit,
-		Start,
-		End,
-		ECC_WorldStatic,
-		Params
-	);
-
+	bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_WorldStatic, Params);
 	return !bHit;
 }
 
-void AMyPacMan::OnOverlapPiece(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+void AMyPacMan::OnOverlapPiece(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	APiece* Piece = Cast<APiece>(OtherActor);
 	if (Piece)
 	{
 		Piece->Destroy();
+
+		UMyGameInstance* GameInstance = Cast<UMyGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
+		if (GameInstance)
+		{
+			GameInstance->AddScore(10);
+			GameInstance->OnPieceEaten();
+		}
 	}
 }
