@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
 #include "GameFramework/FloatingPawnMovement.h"
+#include "Components/BoxComponent.h"
 #include "MyPacMan.generated.h"
 
 UCLASS()
@@ -22,17 +23,21 @@ public:
 
 private:
 	UPROPERTY(VisibleAnywhere)
+	UBoxComponent* CollisionPacMan;
+
+	UPROPERTY(VisibleAnywhere)
 	UStaticMeshComponent* ComposantMesh;
 
 	UPROPERTY(VisibleAnywhere)
 	UFloatingPawnMovement* ComposantMouvement;
 
-	// Fonction de mouvement
 	void MoveForward(float Value);
 	void MoveRight(float Value);
 
 	bool PeutAller(FVector Direction);
 
 	UFUNCTION()
-	void OnOverlapPiece(AActor* OverlappedActor, AActor* OtherActor);
+	void OnOverlapPiece(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
+	FVector DirectionCourante = FVector::ZeroVector;
 };

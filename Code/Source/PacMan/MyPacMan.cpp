@@ -1,9 +1,7 @@
 #include "MyPacMan.h"
 #include "Components/StaticMeshComponent.h"
-#include "GameFramework/FloatingPawnMovement.h"
 #include "Components/InputComponent.h"
 #include "Engine/World.h"
-#include "DrawDebugHelpers.h"
 #include "Piece.h"
 #include "UObject/ConstructorHelpers.h"
 
@@ -11,17 +9,23 @@ AMyPacMan::AMyPacMan()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
-	ComposantMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
-	SetRootComponent(ComposantMesh);
+	CollisionPacMan = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxCollision"));
+	CollisionPacMan->SetBoxExtent(FVector(85.f, 85.f, 85.f));
+	CollisionPacMan->SetCollisionProfileName(TEXT("Pawn"));
+	CollisionPacMan->SetSimulatePhysics(false);
+	CollisionPacMan->SetCanEverAffectNavigation(false);
+	CollisionPacMan->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	SetRootComponent(CollisionPacMan);
 
-	// Ajouter un cube
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> CubeMesh(TEXT("/Engine/BasicShapes/Cube.Cube"));
-	if (CubeMesh.Succeeded())
+	ComposantMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
+	ComposantMesh->SetupAttachment(CollisionPacMan);
+
+	static ConstructorHelpers::FObjectFinder<UStaticMesh> CylinderMesh(TEXT("/Engine/BasicShapes/Cylinder.Cylinder"));
+	if (CylinderMesh.Succeeded())
 	{
-		ComposantMesh->SetStaticMesh(CubeMesh.Object);
+		ComposantMesh->SetStaticMesh(CylinderMesh.Object);
 	}
 
-	// Appliquer un matériau
 	static ConstructorHelpers::FObjectFinder<UMaterial> Materiau(TEXT("Material'/Game/Material/jaune.jaune'"));
 	if (Materiau.Succeeded())
 	{
@@ -31,7 +35,7 @@ AMyPacMan::AMyPacMan()
 	ComposantMouvement = CreateDefaultSubobject<UFloatingPawnMovement>(TEXT("Mouvement"));
 	ComposantMouvement->MaxSpeed = 600.f;
 
-	OnActorBeginOverlap.AddDynamic(this, &AMyPacMan::OnOverlapPiece);
+	CollisionPacMan->OnComponentBeginOverlap.AddDynamic(this, &AMyPacMan::OnOverlapPiece);
 }
 
 void AMyPacMan::BeginPlay()
@@ -42,32 +46,46 @@ void AMyPacMan::BeginPlay()
 void AMyPacMan::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	if (!DirectionCourante.IsZero() && PeutAller(DirectionCourante))
+	{
+		AddMovementInput(DirectionCourante, 1.f);
+	}
+	else
+	{
+		DirectionCourante = FVector::ZeroVector;
+	}
 }
 
 void AMyPacMan::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-	// Bind axes pour ZQSD
 	PlayerInputComponent->BindAxis("MoveForward", this, &AMyPacMan::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &AMyPacMan::MoveRight);
 }
 
-// Déplacement avant/arrière
 void AMyPacMan::MoveForward(float Value)
 {
-	if (Value != 0.f && PeutAller(FVector::ForwardVector * Value))
+	if (Value != 0.f)
 	{
-		AddMovementInput(FVector::ForwardVector, Value);
+		FVector Dir = FVector::ForwardVector * FMath::Sign(Value);
+		if (PeutAller(Dir))
+		{
+			DirectionCourante = Dir;
+		}
 	}
 }
 
-// Déplacement gauche/droite
 void AMyPacMan::MoveRight(float Value)
 {
-	if (Value != 0.f && PeutAller(FVector::RightVector * Value))
+	if (Value != 0.f)
 	{
-		AddMovementInput(FVector::RightVector, Value);
+		FVector Dir = FVector::RightVector * FMath::Sign(Value);
+		if (PeutAller(Dir))
+		{
+			DirectionCourante = Dir;
+		}
 	}
 }
 
@@ -80,14 +98,18 @@ bool AMyPacMan::PeutAller(FVector Direction)
 	FCollisionQueryParams Params;
 	Params.AddIgnoredActor(this);
 
-	bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_WorldStatic, Params);
-
-	DrawDebugLine(GetWorld(), Start, End, bHit ? FColor::Red : FColor::Green, false, 0.f, 0, 2.f);
+	bool bHit = GetWorld()->LineTraceSingleByChannel(
+		Hit,
+		Start,
+		End,
+		ECC_WorldStatic,
+		Params
+	);
 
 	return !bHit;
 }
 
-void AMyPacMan::OnOverlapPiece(AActor* OverlappedActor, AActor* OtherActor)
+void AMyPacMan::OnOverlapPiece(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	APiece* Piece = Cast<APiece>(OtherActor);
 	if (Piece)
