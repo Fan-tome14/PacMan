@@ -7,7 +7,7 @@ UMyGameInstance::UMyGameInstance()
 {
 	CurrentScore = 0;
 	Lives = 3;
-	TotalPieces = 86;     // 82 pac-gommes + 4 super pac-gommes
+	TotalPieces = 86;     
 	PiecesEaten = 0;
 }
 
@@ -26,9 +26,10 @@ void UMyGameInstance::LoseLife()
 
 	if (Lives <= 0)
 	{
-		// Si plus de vies → on charge GameOver
-		UGameplayStatics::OpenLevel(GetWorld(), FName("GameOver"));
+		bIsWinner = false; 
+		UGameplayStatics::OpenLevel(GetWorld(), TEXT("/Game/levels/GameOver"));
 	}
+
 }
 
 void UMyGameInstance::ResetGame()
@@ -45,10 +46,12 @@ void UMyGameInstance::OnPieceEaten()
 
 	UE_LOG(LogTemp, Log, TEXT("Pièce mangée (%d / %d)"), PiecesEaten, TotalPieces);
 
-	if (PiecesEaten >= TotalPieces && TotalPieces > 0)
+	if (PiecesEaten >= TotalPieces)
 	{
+		bIsWinner = true;  
 		UE_LOG(LogTemp, Warning, TEXT("TOUTES LES PIECES MANGEES ! Chargement de GameOver..."));
-		UGameplayStatics::OpenLevel(GetWorld(), FName("/Game/levels/GameOver"));
+		UGameplayStatics::OpenLevel(GetWorld(), TEXT("/Game/levels/GameOver"));
 	}
+
 }
 
