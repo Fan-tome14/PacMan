@@ -16,7 +16,7 @@ AFantomeRouge::AFantomeRouge()
         Mesh->SetStaticMesh(CubeMesh.Object);
 
     // Matériau rouge
-    static ConstructorHelpers::FObjectFinder<UMaterial> Materiau(TEXT("Material'/Game/Material/rouge.rouge'"));
+    static ConstructorHelpers::FObjectFinder<UMaterial> Materiau(TEXT("Material'/Game/Image/rougeMat.rougeMat'"));
     if (Materiau.Succeeded())
         Mesh->SetMaterial(0, Materiau.Object);
 }

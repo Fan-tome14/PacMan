@@ -14,7 +14,7 @@ AFantomeBleu::AFantomeBleu()
     if (CubeMesh.Succeeded())
         Mesh->SetStaticMesh(CubeMesh.Object);
 
-    static ConstructorHelpers::FObjectFinder<UMaterial> Materiau(TEXT("Material'/Game/Material/bleu.bleu'"));
+    static ConstructorHelpers::FObjectFinder<UMaterial> Materiau(TEXT("Material'/Game/Image/bleuMat.bleuMat'"));
     if (Materiau.Succeeded())
         Mesh->SetMaterial(0, Materiau.Object);
 }

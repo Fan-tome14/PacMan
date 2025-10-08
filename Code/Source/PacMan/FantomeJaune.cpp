@@ -14,7 +14,7 @@ AFantomeJaune::AFantomeJaune()
     if (CubeMesh.Succeeded())
         Mesh->SetStaticMesh(CubeMesh.Object);
 
-    static ConstructorHelpers::FObjectFinder<UMaterial> Materiau(TEXT("Material'/Game/Material/jaune.jaune'"));
+    static ConstructorHelpers::FObjectFinder<UMaterial> Materiau(TEXT("Material'/Game/Image/jauneMat.jauneMat'"));
     if (Materiau.Succeeded())
         Mesh->SetMaterial(0, Materiau.Object);
 }

@@ -14,7 +14,7 @@ AFantomeRose::AFantomeRose()
     if (CubeMesh.Succeeded())
         Mesh->SetStaticMesh(CubeMesh.Object);
 
-    static ConstructorHelpers::FObjectFinder<UMaterial> Materiau(TEXT("Material'/Game/Material/rose.rose'"));
+    static ConstructorHelpers::FObjectFinder<UMaterial> Materiau(TEXT("Material'/Game/Image/roseMat.roseMat'"));
     if (Materiau.Succeeded())
         Mesh->SetMaterial(0, Materiau.Object);
 }
