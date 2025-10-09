@@ -1,9 +1,8 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "SuperPacGome.h"
+#include "Ghost.h"
 #include "MyGameInstance.h"
 #include "Kismet/GameplayStatics.h"
+#include "EngineUtils.h" // Pour TActorIterator
 
 void ASuperPacGome::OnEaten()
 {
@@ -12,5 +11,17 @@ void ASuperPacGome::OnEaten()
 		GI->AddScore(100);
 		GI->OnPieceEaten();
 	}
-	//PacMan->ActivateSuperMode();
+
+	// Parcourt tous les ghosts dans le monde et les rend effrayés
+	for (TActorIterator<AGhost> It(GetWorld()); It; ++It)
+	{
+		AGhost* Ghost = *It;
+		if (Ghost)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("j'ai peur"));
+			Ghost->SetFrightenMode();
+		}
+	}
+
+	// PacMan->ActivateSuperMode(); // si tu veux activer le mode super sur Pac-Man
 }

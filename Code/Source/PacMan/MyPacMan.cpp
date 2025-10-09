@@ -2,7 +2,6 @@
 #include "Components/StaticMeshComponent.h"
 #include "Components/InputComponent.h"
 #include "Engine/World.h"
-#include "Piece.h"
 #include "UObject/ConstructorHelpers.h"
 #include "Kismet/GameplayStatics.h"
 #include "MyGameInstance.h"
@@ -33,8 +32,6 @@ AMyPacMan::AMyPacMan()
 
 	ComposantMouvement = CreateDefaultSubobject<UFloatingPawnMovement>(TEXT("Mouvement"));
 	ComposantMouvement->MaxSpeed = 600.f;
-
-	CollisionPacMan->OnComponentBeginOverlap.AddDynamic(this, &AMyPacMan::OnOverlapPiece);
 }
 
 void AMyPacMan::BeginPlay()
@@ -91,19 +88,3 @@ bool AMyPacMan::PeutAller(FVector Direction)
 	return !bHit;
 }
 
-void AMyPacMan::OnOverlapPiece(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
-{
-	APiece* Piece = Cast<APiece>(OtherActor);
-	if (Piece)
-	{
-		Piece->Destroy();
-
-		UMyGameInstance* GameInstance = Cast<UMyGameInstance>(UGameplayStatics::GetGameInstance(GetWorld()));
-		if (GameInstance)
-		{
-			GameInstance->AddScore(10);
-			GameInstance->OnPieceEaten();
-		}
-	}
-}
