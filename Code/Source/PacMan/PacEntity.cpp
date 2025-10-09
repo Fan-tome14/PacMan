@@ -15,16 +15,6 @@ APacEntity::APacEntity()
     // Root simple
     RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 
-    // Collision box attachée au root
-    CollisionBox = CreateDefaultSubobject<UBoxComponent>(TEXT("CollisionBox"));
-    CollisionBox->SetupAttachment(RootComponent);
-    CollisionBox->SetBoxExtent(FVector(16.f, 16.f, 16.f));
-    CollisionBox->SetCollisionProfileName(TEXT("Pawn"));
-    CollisionBox->SetGenerateOverlapEvents(true);
-
-    // Bind Overlap
-    CollisionBox->OnComponentBeginOverlap.AddDynamic(this, &APacEntity::OnOverlap);
-
     // Flipbook attaché au root
     Flipbook = CreateDefaultSubobject<UPaperFlipbookComponent>(TEXT("Flipbook"));
     Flipbook->SetupAttachment(RootComponent);
@@ -37,31 +27,6 @@ APacEntity::APacEntity()
     MoveSpeed = 300.f;
     DirectionCourante = FVector::ForwardVector;
     ProchaineDirection = FVector::ZeroVector;
-
-    CollisionBox->OnComponentBeginOverlap.AddDynamic(this, &APacEntity::OnOverlap);
-}
-
-// --- Overlap ---
-void APacEntity::OnOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
-                           UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
-                           bool bFromSweep, const FHitResult & SweepResult)
-{
-    if (!OtherActor || OtherActor == this) return;
-
-    AMyPacMan* Pac = Cast<AMyPacMan>(OtherActor);
-    if (!Pac) return;
-
-    AGhost* Ghost = Cast<AGhost>(this);
-    if (!Ghost) return;
-
-    if (Ghost->IsNormal)
-    {
-        if (UMyGameInstance* GI = Cast<UMyGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
-        {
-            GI->LoseLife();
-        }
-    }
-    // sinon (frightened ou dead) ne rien faire
 }
 
 void APacEntity::BeginPlay()

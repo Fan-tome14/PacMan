@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "PacEntity.h"
 #include "BehaviorTree/BehaviorTree.h"
+#include "Components/BoxComponent.h"
 #include "Ghost.generated.h"
 
 UCLASS()
@@ -17,13 +18,11 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
 
-private:
-	FTimerHandle FrightenedTimerHandle;
 public:
+	// Collision
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	UBoxComponent* CollisionBox;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Ghost")
-	float FrightenedDuration = 7.f; // exemple : 7 secondes
-	
 	// Flipbooks
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Sprite")
 	UPaperFlipbook* BaseFlipbook;
@@ -40,23 +39,36 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, Category="Etat")
 	bool IsFrightened;
-	
+
 	UPROPERTY(BlueprintReadWrite, Category="Etat")
 	bool IsNormal;
-	
+
+	UPROPERTY(BlueprintReadWrite, Category="Etat")
+	bool bCanMove = true;
+
 	// Behavior Tree
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AI")
 	UBehaviorTree* TreeAsset;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Respawn")
+	float RespawnDelay = 5.f;
+
+private:
+	FTimerHandle FrightenedTimerHandle;
+
+public:
 	// Méthodes d’état
 	void SetAliveMode();
 	void SetDeadMode();
 	void SetFrightenMode();
+	void Respawn();
 
 	// Collision
 	UFUNCTION()
-	void OnOverlap(AActor* OverlappedActor, AActor* OtherActor);
+	void OnBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+						UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
+						bool bFromSweep, const FHitResult& SweepResult);
 
-	// Flipbook orientation pour suivre la vitesse
+	// Flipbook orientation
 	void UpdateFlipbookFromVelocity();
 };

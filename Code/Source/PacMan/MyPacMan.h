@@ -1,9 +1,9 @@
 #pragma once
-
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
-#include "GameFramework/FloatingPawnMovement.h"
 #include "Components/BoxComponent.h"
+#include "PaperFlipbookComponent.h"
+#include "GameFramework/FloatingPawnMovement.h"
 #include "MyPacMan.generated.h"
 
 UCLASS()
@@ -19,22 +19,26 @@ protected:
 
 public:
 	virtual void Tick(float DeltaTime) override;
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
+
+	void MoveForward(float Value);
+	void MoveRight(float Value);
+	bool PeutAller(FVector Direction);
+
+	void UpdateFlipbookRotation();
 
 private:
+	FVector DirectionCourante = FVector::ZeroVector;
+
+	UPROPERTY(VisibleAnywhere)
+	USceneComponent* RootScene;
+
 	UPROPERTY(VisibleAnywhere)
 	UBoxComponent* CollisionPacMan;
 
 	UPROPERTY(VisibleAnywhere)
-	UStaticMeshComponent* ComposantMesh;
+	UPaperFlipbookComponent* Flipbook;
 
 	UPROPERTY(VisibleAnywhere)
 	UFloatingPawnMovement* ComposantMouvement;
-
-	void MoveForward(float Value);
-	void MoveRight(float Value);
-
-	bool PeutAller(FVector Direction);
-
-	FVector DirectionCourante = FVector::ZeroVector;
 };
