@@ -212,7 +212,10 @@ void AGhost::OnBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherAc
         UE_LOG(LogTemp, Warning, TEXT("Pac-Man touché par %s !"), *GetName());
     }
 }
-
+void AGhost::ResetGhost()
+{
+    // jsute pour debug
+}
 // --- Flipbook ---
 void AGhost::UpdateFlipbookFromVelocity()
 {
