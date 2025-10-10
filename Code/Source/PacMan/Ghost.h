@@ -2,73 +2,68 @@
 
 #include "CoreMinimal.h"
 #include "PacEntity.h"
-#include "BehaviorTree/BehaviorTree.h"
+#include "PaperFlipbook.h"
 #include "Components/BoxComponent.h"
+#include "BehaviorTree/BehaviorTree.h"
 #include "Ghost.generated.h"
 
 UCLASS()
 class PACMAN_API AGhost : public APacEntity
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
 public:
-	AGhost();
+    AGhost();
 
 protected:
-	virtual void BeginPlay() override;
-	virtual void Tick(float DeltaTime) override;
+    virtual void BeginPlay() override;
 
 public:
-	// Collision
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-	UBoxComponent* CollisionBox;
+    virtual void Tick(float DeltaTime) override;
 
-	// Flipbooks
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Sprite")
-	UPaperFlipbook* BaseFlipbook;
+    // --- Composants spécifiques ---
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+    UBoxComponent* CollisionBox;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Sprite")
-	UPaperFlipbook* DeadFlipbook;
+    // --- Flipbooks spécifiques ---
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    UPaperFlipbook* BaseFlipbook;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Sprite")
-	UPaperFlipbook* FrightenFlipbook;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    UPaperFlipbook* DeadFlipbook;
 
-	// États
-	UPROPERTY(BlueprintReadWrite, Category="Etat")
-	bool IsDead;
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    UPaperFlipbook* FrightenFlipbook;
 
-	UPROPERTY(BlueprintReadWrite, Category="Etat")
-	bool IsFrightened;
+    // --- Behavior Tree ---
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    UBehaviorTree* TreeAsset;
 
-	UPROPERTY(BlueprintReadWrite, Category="Etat")
-	bool IsNormal;
+    // --- États ---
+    bool IsDead;
+    bool IsFrightened;
+    bool IsNormal;
+    bool bCanMove;
 
-	UPROPERTY(BlueprintReadWrite, Category="Etat")
-	bool bCanMove = true;
+    // --- Position initiale pour reset ---
+    FVector InitialLocation;
+    FRotator InitialRotation;
 
-	// Behavior Tree
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="AI")
-	UBehaviorTree* TreeAsset;
+    // --- Timer ---
+    FTimerHandle FrightenedTimerHandle;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Respawn")
-	float RespawnDelay = 5.f;
+    // --- Fonctions ---
+    void SetAliveMode();
+    void SetDeadMode();
+    void SetFrightenMode();
+    void EndFrightenedMode();
+    void Respawn();
+    void UpdateFlipbookFromVelocity();
+    void ResetGhost();
 
-private:
-	FTimerHandle FrightenedTimerHandle;
-
-public:
-	// Méthodes d’état
-	void SetAliveMode();
-	void SetDeadMode();
-	void SetFrightenMode();
-	void Respawn();
-
-	// Collision
-	UFUNCTION()
-	void OnBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
-						UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
-						bool bFromSweep, const FHitResult& SweepResult);
-
-	// Flipbook orientation
-	void UpdateFlipbookFromVelocity();
+    // --- Collision ---
+    UFUNCTION()
+    void OnBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+                        UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
+                        bool bFromSweep, const FHitResult& SweepResult);
 };

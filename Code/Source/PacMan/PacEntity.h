@@ -3,7 +3,6 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
 #include "PaperFlipbookComponent.h"
-#include "Components/BoxComponent.h"
 #include "GameFramework/FloatingPawnMovement.h"
 #include "PacEntity.generated.h"
 
@@ -14,32 +13,31 @@ class PACMAN_API APacEntity : public APawn
 
 public:
 	APacEntity();
+
 protected:
 	virtual void BeginPlay() override;
+
+public:
 	virtual void Tick(float DeltaTime) override;
+	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 
-	// --- Composants ---
+	// Mouvement
+	void MoveForward(float Value);
+	void MoveRight(float Value);
+	bool PeutAller(const FVector& Direction);
 
+	// Flipbook
+	void UpdateFlipbookOrientation();
+
+	// Composants
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	UPaperFlipbookComponent* Flipbook;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	UFloatingPawnMovement* PawnMovement;
 
-	// --- Variables de mouvement ---
+	// Variables
 	FVector DirectionCourante;
 	FVector ProchaineDirection;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Mouvement")
 	float MoveSpeed;
-
-public:
-	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
-
-	void MoveForward(float Value);
-	void MoveRight(float Value);
-
-	bool PeutAller(const FVector& Direction);
-
-	void UpdateFlipbookOrientation();
 };

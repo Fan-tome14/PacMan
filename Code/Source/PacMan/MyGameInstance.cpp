@@ -1,4 +1,6 @@
 #include "MyGameInstance.h"
+
+#include "Ghost.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/Engine.h"
 #include "Engine/World.h"
@@ -39,7 +41,21 @@ void UMyGameInstance::ResetGame()
 	Lives = 3;
 	PiecesEaten = 0;
 	TotalPieces = 86;
+
 	UE_LOG(LogTemp, Log, TEXT("Nouvelle partie lancée ! Variables réinitialisées !"));
+
+	// Réinitialise tous les fantômes
+	TArray<AActor*> FoundGhosts;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), AGhost::StaticClass(), FoundGhosts);
+
+	for (AActor* Actor : FoundGhosts)
+	{
+		AGhost* Ghost = Cast<AGhost>(Actor);
+		if (Ghost)
+		{
+			Ghost->ResetGhost();
+		}
+	}
 }
 
 void UMyGameInstance::OnPieceEaten()

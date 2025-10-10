@@ -22,7 +22,6 @@ AGhost::AGhost()
     CollisionBox->SetGenerateOverlapEvents(true);
     CollisionBox->SetCollisionObjectType(ECC_WorldDynamic);
 
-    // Bind overlap
     CollisionBox->OnComponentBeginOverlap.AddDynamic(this, &AGhost::OnBeginOverlap);
 
     // PawnMovement
@@ -32,16 +31,7 @@ AGhost::AGhost()
     }
     PawnMovement->UpdatedComponent = RootComponent;
     PawnMovement->MaxSpeed = 350.f;
-
-    // Flipbook
-    if (!Flipbook)
-    {
-        Flipbook = CreateDefaultSubobject<UPaperFlipbookComponent>(TEXT("Flipbook"));
-        Flipbook->SetupAttachment(RootComponent);
-    }
-    Flipbook->SetLooping(true);
-    Flipbook->Play();
-
+    
     AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
     AIControllerClass = AAIController::StaticClass();
 }
@@ -85,6 +75,7 @@ void AGhost::SetAliveMode()
 
     if (BaseFlipbook && Flipbook)
     {
+        
         Flipbook->SetFlipbook(BaseFlipbook);
         Flipbook->SetLooping(true);
         Flipbook->Play();
@@ -107,7 +98,7 @@ void AGhost::SetDeadMode()
     IsNormal = false;
     IsFrightened = false;
     
-    bCanMove = false; // stop le mouvement immédiatement
+    bCanMove = false;
     if(PawnMovement)
         PawnMovement->StopMovementImmediately();
 
@@ -118,7 +109,6 @@ void AGhost::SetDeadMode()
         Flipbook->Play();
     }
 
-    // Blackboard
     if(AAIController* AICon = Cast<AAIController>(GetController()))
     {
         if(UBlackboardComponent* BB = AICon->GetBlackboardComponent())
@@ -130,13 +120,12 @@ void AGhost::SetDeadMode()
     }
 }
 
-
-
 void AGhost::SetFrightenMode()
 {
     IsFrightened = true;
     IsDead = false;
     IsNormal = false;
+    bCanMove = true;
 
     if (FrightenFlipbook && Flipbook)
     {
@@ -147,13 +136,30 @@ void AGhost::SetFrightenMode()
 
     if (AAIController* AICon = Cast<AAIController>(GetController()))
     {
-        if (AICon->GetBlackboardComponent())
+        if (UBlackboardComponent* BB = AICon->GetBlackboardComponent())
         {
-            AICon->GetBlackboardComponent()->ClearValue("IsNormal");
-            AICon->GetBlackboardComponent()->SetValueAsBool("IsFrightened", true);
+            BB->ClearValue("IsNormal");
+            BB->SetValueAsBool("IsFrightened", true);
         }
     }
+
+    // Timer pour finir le frightened mode
+    GetWorldTimerManager().SetTimer(FrightenedTimerHandle, this, &AGhost::EndFrightenedMode, 5.f, false);
 }
+
+void AGhost::EndFrightenedMode()
+{
+    if (AAIController* AICon = Cast<AAIController>(GetController()))
+    {
+        if (UBlackboardComponent* BB = AICon->GetBlackboardComponent())
+        {
+            BB->ClearValue("IsFrightened");
+            BB->SetValueAsBool("IsNormal", true);
+        }
+        SetAliveMode();
+    }
+}
+
 
 void AGhost::Respawn()
 {
@@ -173,25 +179,37 @@ void AGhost::OnBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherAc
                             UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
                             bool bFromSweep, const FHitResult& SweepResult)
 {
-    if (!OtherActor || OtherActor == this) return;
+    if (!OtherActor || OtherActor == this) 
+        return;
 
-    if (AMyPacMan* Pac = Cast<AMyPacMan>(OtherActor))
+    AMyPacMan* Pac = Cast<AMyPacMan>(OtherActor);
+    if (!Pac) return;
+
+    AAIController* AICon = Cast<AAIController>(GetController());
+    if (!AICon) return;
+
+    UBlackboardComponent* BB = AICon->GetBlackboardComponent();
+    if (!BB) return;
+
+    bool bIsDead = BB->GetValueAsBool("IsDead");
+    bool bIsFrightened = BB->GetValueAsBool("IsFrightened");
+    bool bIsNormal = BB->GetValueAsBool("IsNormal");
+
+    if (bIsDead) 
+        return;
+
+    if (bIsFrightened)
     {
-        if (IsDead) return;
-
-        if (IsFrightened)
+        SetDeadMode();
+        UE_LOG(LogTemp, Warning, TEXT("%s a été mangé par Pac-Man !"), *GetName());
+    }
+    else if (bIsNormal)
+    {
+        if (UMyGameInstance* GI = Cast<UMyGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
         {
-            SetDeadMode();
-            UE_LOG(LogTemp, Warning, TEXT("%s a été mangé par Pac-Man !"), *GetName());
+            GI->LoseLife();
         }
-        else if (IsNormal)
-        {
-            if (UMyGameInstance* GI = Cast<UMyGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
-            {
-                GI->LoseLife();
-            }
-            UE_LOG(LogTemp, Warning, TEXT("Pac-Man touché par %s !"), *GetName());
-        }
+        UE_LOG(LogTemp, Warning, TEXT("Pac-Man touché par %s !"), *GetName());
     }
 }
 
@@ -206,11 +224,11 @@ void AGhost::UpdateFlipbookFromVelocity()
     FVector Dir = Vel.GetSafeNormal2D();
 
     if (Dir.Equals(FVector::RightVector, 0.1f))
-        Flipbook->SetRelativeRotation(FRotator(0.f, 0.f, 0.f));
+        Flipbook->SetRelativeRotation(FRotator(0.f, 0.f, -90.f));
     else if (Dir.Equals(-FVector::RightVector, 0.1f))
-        Flipbook->SetRelativeRotation(FRotator(0.f, 180.f, 0.f));
+        Flipbook->SetRelativeRotation(FRotator(0.f, 180.f, -90.f));
     else if (Dir.Equals(FVector::ForwardVector, 0.1f))
-        Flipbook->SetRelativeRotation(FRotator(0.f, -90.f, 0.f));
+        Flipbook->SetRelativeRotation(FRotator(0.f, -90.f, -90.f));
     else if (Dir.Equals(-FVector::ForwardVector, 0.1f))
-        Flipbook->SetRelativeRotation(FRotator(0.f, 90.f, 0.f));
+        Flipbook->SetRelativeRotation(FRotator(0.f, 90.f, -90.f));
 }

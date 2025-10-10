@@ -1,23 +1,19 @@
 #include "PacEntity.h"
 #include "Components/InputComponent.h"
-#include "Components/BoxComponent.h"
 #include "Engine/World.h"
-#include "MyGameInstance.h"
-#include "Kismet/GameplayStatics.h"
-#include "Ghost.h"
-#include "MyPacMan.h"
 
-// Sets default values
 APacEntity::APacEntity()
 {
     PrimaryActorTick.bCanEverTick = true;
 
-    // Root simple
+    // Root
     RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
 
-    // Flipbook attaché au root
+    // Flipbook
     Flipbook = CreateDefaultSubobject<UPaperFlipbookComponent>(TEXT("Flipbook"));
     Flipbook->SetupAttachment(RootComponent);
+    Flipbook->SetRelativeRotation(FRotator(0.f, 0.f, -90.f)); // horizontal
+    Flipbook->SetRelativeLocation(FVector(0.f, 0.f, 50.f));
 
     // Mouvement
     PawnMovement = CreateDefaultSubobject<UFloatingPawnMovement>(TEXT("PawnMovement"));
@@ -84,8 +80,7 @@ void APacEntity::MoveRight(float Value)
 
 bool APacEntity::PeutAller(const FVector& Direction)
 {
-    // Pour l’instant, toujours vrai
-    return true;
+    return true; // Pour l’instant toujours possible
 }
 
 void APacEntity::UpdateFlipbookOrientation()
@@ -95,11 +90,11 @@ void APacEntity::UpdateFlipbookOrientation()
     FVector Dir = DirectionCourante;
 
     if (Dir.Equals(FVector::RightVector))
-        Flipbook->SetRelativeRotation(FRotator(0.f, 0.f, 0.f));
+        Flipbook->SetRelativeRotation(FRotator(0.f, 0.f, -90.f));
     else if (Dir.Equals(-FVector::RightVector))
-        Flipbook->SetRelativeRotation(FRotator(0.f, 180.f, 0.f));
+        Flipbook->SetRelativeRotation(FRotator(0.f, 180.f, -90.f));
     else if (Dir.Equals(FVector::ForwardVector))
-        Flipbook->SetRelativeRotation(FRotator(0.f, -90.f, 0.f));
+        Flipbook->SetRelativeRotation(FRotator(0.f, -90.f, -90.f));
     else if (Dir.Equals(-FVector::ForwardVector))
-        Flipbook->SetRelativeRotation(FRotator(0.f, 90.f, 0.f));
+        Flipbook->SetRelativeRotation(FRotator(0.f, 90.f, -90.f));
 }
