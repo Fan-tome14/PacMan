@@ -44,8 +44,8 @@ private:
 	UPROPERTY(VisibleAnywhere)
 	UPaperFlipbookComponent* Flipbook;
 
-	UPROPERTY(VisibleAnywhere)
-	UPaperFlipbookComponent* DeadFlipbook;
+	UPROPERTY(EditAnywhere)
+	UPaperFlipbook* DeadFlipbook;
 
 	UPaperFlipbook* BaseFlipbook;
 

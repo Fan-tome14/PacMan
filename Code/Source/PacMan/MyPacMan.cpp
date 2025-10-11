@@ -117,27 +117,56 @@ void AMyPacMan::UpdateFlipbookRotation()
 
 void AMyPacMan::Die()
 {
+    // Stop le mouvement immédiatement
     if (ComposantMouvement)
+    {
         ComposantMouvement->StopMovementImmediately();
+        ComposantMouvement->Deactivate(); // désactive temporairement le mouvement
+    }
 
+    // Désactiver les entrées du joueur
+    if (InputComponent)
+    {
+        InputComponent->Deactivate();
+    }
+
+    // Jouer le flipbook mort
     if (DeadFlipbook && Flipbook)
     {
-        Flipbook->SetFlipbook(DeadFlipbook->GetFlipbook());
+        Flipbook->SetFlipbook(DeadFlipbook);
+        Flipbook->SetRelativeRotation(FRotator(0.f, 0.f, -90.f));
         Flipbook->SetLooping(false);
         Flipbook->Play();
     }
 
-    GetWorldTimerManager().SetTimer(DeathTimerHandle, this, &AMyPacMan::ResetPosition, 1.0f, false);
+    // Timer pour reset après l'animation
+    GetWorldTimerManager().SetTimer(DeathTimerHandle, this, &AMyPacMan::ResetPosition, 1.2f, false);
 }
+
 
 void AMyPacMan::ResetPosition()
 {
     SetActorLocation(InitialLocation);
 
+    // Réactiver le flipbook normal
     if (Flipbook && BaseFlipbook)
     {
         Flipbook->SetFlipbook(BaseFlipbook);
         Flipbook->SetLooping(true);
         Flipbook->Play();
     }
+
+    // Réactiver mouvement et input
+    if (ComposantMouvement)
+    {
+        ComposantMouvement->Activate();
+    }
+
+    if (InputComponent)
+    {
+        InputComponent->Activate();
+    }
+
+    DirectionCourante = FVector::ZeroVector;
 }
+
