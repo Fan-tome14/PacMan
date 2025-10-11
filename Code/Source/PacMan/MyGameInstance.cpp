@@ -27,13 +27,14 @@ void UMyGameInstance::LoseLife()
 
     UE_LOG(LogTemp, Warning, TEXT("Vies restantes: %d"), Lives);
 
-    // Reset Pac-Man et fantômes
+    // Réinitialisation de Pac-Man
     AMyPacMan* Pac = Cast<AMyPacMan>(UGameplayStatics::GetPlayerPawn(GetWorld(), 0));
     if (Pac)
     {
-        Pac->Die(); // lance animation de mort puis reset
+        Pac->Die(); // animation de mort + repositionnement géré par Pac-Man
     }
 
+    // Réinitialisation des fantômes
     TArray<AActor*> FoundGhosts;
     UGameplayStatics::GetAllActorsOfClass(GetWorld(), AGhost::StaticClass(), FoundGhosts);
     for (AActor* Actor : FoundGhosts)
@@ -46,10 +47,12 @@ void UMyGameInstance::LoseLife()
         }
     }
 
+    // Si plus de vie → déclenchement GameOver (dans Blueprint)
     if (Lives <= 0)
     {
         bIsWinner = false;
-        UGameplayStatics::OpenLevel(GetWorld(), TEXT("/Game/levels/GameOver"));
+        UE_LOG(LogTemp, Warning, TEXT("Toutes les vies perdues — appel de OnGameOver()"));
+        OnGameOver(); //  Appelé dans Blueprint
     }
 }
 
@@ -59,10 +62,11 @@ void UMyGameInstance::ResetGame()
     Lives = 3;
     PiecesEaten = 0;
     TotalPieces = 86;
+    bIsWinner = false;
 
     UE_LOG(LogTemp, Log, TEXT("Nouvelle partie lancée ! Variables réinitialisées !"));
 
-    // Reset fantômes
+    // Reset des fantômes
     TArray<AActor*> FoundGhosts;
     UGameplayStatics::GetAllActorsOfClass(GetWorld(), AGhost::StaticClass(), FoundGhosts);
     for (AActor* Actor : FoundGhosts)
@@ -75,7 +79,7 @@ void UMyGameInstance::ResetGame()
         }
     }
 
-    // Reset Pac-Man
+    // Reset de Pac-Man
     AMyPacMan* Pac = Cast<AMyPacMan>(UGameplayStatics::GetPlayerPawn(GetWorld(), 0));
     if (Pac)
     {
@@ -89,10 +93,11 @@ void UMyGameInstance::OnPieceEaten()
 
     UE_LOG(LogTemp, Log, TEXT("Pièce mangée (%d / %d)"), PiecesEaten, TotalPieces);
 
+    // Si toutes les pièces sont mangées → victoire → appel Blueprint
     if (PiecesEaten >= TotalPieces)
     {
         bIsWinner = true;
-        UE_LOG(LogTemp, Warning, TEXT("TOUTES LES PIECES MANGEES ! Chargement de GameOver..."));
-        UGameplayStatics::OpenLevel(GetWorld(), TEXT("/Game/levels/GameOver"));
+        UE_LOG(LogTemp, Warning, TEXT("Toutes les pièces mangées — appel de OnGameOver()"));
+        OnGameOver(); //  Appelé dans Blueprint
     }
 }
