@@ -13,25 +13,25 @@ AGhost::AGhost()
     IsDead = false;
     IsFrightened = false;
     IsNormal = true;
+    bCanMove = true;
 
-    // BoxCollision
+    // --- Collision ---
     CollisionBox = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxCollision"));
     CollisionBox->SetupAttachment(RootComponent);
     CollisionBox->SetBoxExtent(FVector(80.f, 80.f, 80.f));
     CollisionBox->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
     CollisionBox->SetGenerateOverlapEvents(true);
     CollisionBox->SetCollisionObjectType(ECC_WorldDynamic);
-
     CollisionBox->OnComponentBeginOverlap.AddDynamic(this, &AGhost::OnBeginOverlap);
 
-    // PawnMovement
+    // --- Mouvement ---
     if (!PawnMovement)
     {
         PawnMovement = CreateDefaultSubobject<UFloatingPawnMovement>(TEXT("PawnMovement"));
     }
     PawnMovement->UpdatedComponent = RootComponent;
     PawnMovement->MaxSpeed = 350.f;
-    
+
     AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
     AIControllerClass = AAIController::StaticClass();
 }
@@ -61,11 +61,33 @@ void AGhost::BeginPlay()
 void AGhost::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
-    if(bCanMove)
+
+    // Si le fantôme est mort : pas de mise à jour
+    if (IsDead)
+        return;
+
+    // Si en mode effrayé : on fige le flipbook Frightened
+    if (IsFrightened)
+    {
+        if (FrightenFlipbook && Flipbook)
+        {
+            if (Flipbook->GetFlipbook() != FrightenFlipbook)
+            {
+                Flipbook->SetFlipbook(FrightenFlipbook);
+                Flipbook->SetLooping(true);
+                Flipbook->Play();
+            }
+        }
+        return; // pas de mise à jour directionnelle
+    }
+
+    // Sinon, comportement normal
+    if (bCanMove)
         UpdateFlipbookFromVelocity();
 }
 
 // --- États ---
+
 void AGhost::SetAliveMode()
 {
     IsDead = false;
@@ -75,7 +97,6 @@ void AGhost::SetAliveMode()
 
     if (BaseFlipbook && Flipbook)
     {
-        
         Flipbook->SetFlipbook(BaseFlipbook);
         Flipbook->SetLooping(true);
         Flipbook->Play();
@@ -85,9 +106,10 @@ void AGhost::SetAliveMode()
     {
         if (AICon->GetBlackboardComponent())
         {
-            AICon->GetBlackboardComponent()->SetValueAsBool("IsNormal", true);
-            AICon->GetBlackboardComponent()->ClearValue("IsFrightened");
-            AICon->GetBlackboardComponent()->ClearValue("IsDead");
+            UBlackboardComponent* BB = AICon->GetBlackboardComponent();
+            BB->SetValueAsBool("IsNormal", true);
+            BB->ClearValue("IsFrightened");
+            BB->ClearValue("IsDead");
         }
     }
 }
@@ -97,21 +119,21 @@ void AGhost::SetDeadMode()
     IsDead = true;
     IsNormal = false;
     IsFrightened = false;
-    
     bCanMove = false;
-    if(PawnMovement)
+
+    if (PawnMovement)
         PawnMovement->StopMovementImmediately();
 
-    if(DeadFlipbook && Flipbook)
+    if (DeadFlipbook && Flipbook)
     {
         Flipbook->SetFlipbook(DeadFlipbook);
         Flipbook->SetLooping(true);
         Flipbook->Play();
     }
 
-    if(AAIController* AICon = Cast<AAIController>(GetController()))
+    if (AAIController* AICon = Cast<AAIController>(GetController()))
     {
-        if(UBlackboardComponent* BB = AICon->GetBlackboardComponent())
+        if (UBlackboardComponent* BB = AICon->GetBlackboardComponent())
         {
             BB->SetValueAsBool("IsDead", true);
             BB->ClearValue("IsNormal");
@@ -143,23 +165,17 @@ void AGhost::SetFrightenMode()
         }
     }
 
-    // Timer pour finir le frightened mode
+    // Timer pour la fin du mode effrayé
     GetWorldTimerManager().SetTimer(FrightenedTimerHandle, this, &AGhost::EndFrightenedMode, 5.f, false);
 }
 
 void AGhost::EndFrightenedMode()
 {
-    if (AAIController* AICon = Cast<AAIController>(GetController()))
-    {
-        if (UBlackboardComponent* BB = AICon->GetBlackboardComponent())
-        {
-            BB->ClearValue("IsFrightened");
-            BB->SetValueAsBool("IsNormal", true);
-        }
-        SetAliveMode();
-    }
-}
+    if (IsDead) return;
 
+    // Simplement retour à l'état normal
+    SetAliveMode();
+}
 
 void AGhost::Respawn()
 {
@@ -171,17 +187,20 @@ void AGhost::Respawn()
             SetActorLocation(SpawnLoc);
         }
     }
+
     GetWorldTimerManager().SetTimer(FrightenedTimerHandle, this, &AGhost::SetAliveMode, 5.f, false);
 }
 
 // --- Collision ---
+
 void AGhost::OnBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
-                            UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
-                            bool bFromSweep, const FHitResult& SweepResult)
+    UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
+    bool bFromSweep, const FHitResult& SweepResult)
 {
-    if (!OtherActor || OtherActor == this) 
+    if (!OtherActor || OtherActor == this)
         return;
 
+    // Vérifie si c'est Pac-Man
     AMyPacMan* Pac = Cast<AMyPacMan>(OtherActor);
     if (!Pac) return;
 
@@ -195,28 +214,72 @@ void AGhost::OnBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherAc
     bool bIsFrightened = BB->GetValueAsBool("IsFrightened");
     bool bIsNormal = BB->GetValueAsBool("IsNormal");
 
-    if (bIsDead) 
+    if (bIsDead)
         return;
 
     if (bIsFrightened)
     {
+        // Fantôme mangé par Pac-Man
         SetDeadMode();
         UE_LOG(LogTemp, Warning, TEXT("%s a été mangé par Pac-Man !"), *GetName());
     }
     else if (bIsNormal)
     {
+        // Pac-Man touché
+        Pac->Die(); // Lance le dead flipbook et reset Pac-Man
+
         if (UMyGameInstance* GI = Cast<UMyGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
         {
             GI->LoseLife();
         }
+
+        // Reset des fantômes
+        TArray<AActor*> FoundGhosts;
+        UGameplayStatics::GetAllActorsOfClass(GetWorld(), AGhost::StaticClass(), FoundGhosts);
+        for (AActor* Actor : FoundGhosts)
+        {
+            AGhost* Ghost = Cast<AGhost>(Actor);
+            if (Ghost)
+            {
+                Ghost->ResetGhost(); // Retour à leur spawn initial
+                Ghost->SetAliveMode();  // Réactive leur IA et flipbook normal
+            }
+        }
+
         UE_LOG(LogTemp, Warning, TEXT("Pac-Man touché par %s !"), *GetName());
     }
 }
+
+
 void AGhost::ResetGhost()
 {
-    // jsute pour debug
+    // Retour à la position initiale du fantôme
+    SetActorLocation(InitialLocation);
+
+    // Stoppe tout mouvement en cours
+    if (PawnMovement)
+    {
+        PawnMovement->StopMovementImmediately();
+    }
+
+    // Réactive le mode normal
+    SetAliveMode();
+
+    // Réinitialise la cible du Blackboard si nécessaire
+    if (AAIController* AICon = Cast<AAIController>(GetController()))
+    {
+        if (UBlackboardComponent* BB = AICon->GetBlackboardComponent())
+        {
+            BB->ClearValue("TargetLocation");
+            BB->SetValueAsBool("IsDead", false);
+            BB->SetValueAsBool("IsFrightened", false);
+            BB->SetValueAsBool("IsNormal", true);
+        }
+    }
 }
-// --- Flipbook ---
+
+// --- Flipbooks de direction ---
+
 void AGhost::UpdateFlipbookFromVelocity()
 {
     if (!Flipbook || !PawnMovement || !PawnMovement->UpdatedComponent) return;
@@ -233,12 +296,12 @@ void AGhost::UpdateFlipbookFromVelocity()
         if (Dir.X > 0.1f)
         {
             if (Flipbook_Right) Flipbook->SetFlipbook(Flipbook_Right);
-            Flipbook->SetRelativeRotation(FRotator(0.f, 0.f, -90.f));
+            Flipbook->SetRelativeRotation(FRotator(0.f, 90.f, -90.f));
         }
         else if (Dir.X < -0.1f)
         {
             if (Flipbook_Left) Flipbook->SetFlipbook(Flipbook_Left);
-            Flipbook->SetRelativeRotation(FRotator(0.f, 180.f, -90.f));
+            Flipbook->SetRelativeRotation(FRotator(0.f, 90.f, -90.f));
         }
     }
     else
@@ -247,7 +310,7 @@ void AGhost::UpdateFlipbookFromVelocity()
         if (Dir.Y > 0.1f)
         {
             if (Flipbook_Up) Flipbook->SetFlipbook(Flipbook_Up);
-            Flipbook->SetRelativeRotation(FRotator(0.f, -90.f, -90.f));
+            Flipbook->SetRelativeRotation(FRotator(0.f, 90.f, -90.f));
         }
         else if (Dir.Y < -0.1f)
         {
@@ -259,4 +322,3 @@ void AGhost::UpdateFlipbookFromVelocity()
     Flipbook->SetLooping(true);
     Flipbook->Play();
 }
-

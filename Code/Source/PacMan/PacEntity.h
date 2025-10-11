@@ -25,10 +25,10 @@ public:
 	void MoveForward(float Value);
 	void MoveRight(float Value);
 	bool PeutAller(const FVector& Direction);
+	void ResetPosition();
 
 	// Flipbook
-	void UpdateFlipbookOrientation();
-
+	FVector InitialLocation;
 	// Composants
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	UPaperFlipbookComponent* Flipbook;

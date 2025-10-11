@@ -1,29 +1,29 @@
+// MyPacMan.cpp
 #include "MyPacMan.h"
 #include "Components/InputComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Engine/World.h"
-#include "UObject/ConstructorHelpers.h"
 #include "GameFramework/FloatingPawnMovement.h"
 
 AMyPacMan::AMyPacMan()
 {
     PrimaryActorTick.bCanEverTick = true;
 
-    // Root vide
+    // Root
     RootScene = CreateDefaultSubobject<USceneComponent>(TEXT("RootScene"));
     SetRootComponent(RootScene);
 
-    // Collision principale
+    // Collision
     CollisionPacMan = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxCollision"));
     CollisionPacMan->SetBoxExtent(FVector(85.f, 85.f, 85.f));
     CollisionPacMan->SetCollisionProfileName(TEXT("Pawn"));
     CollisionPacMan->SetupAttachment(RootScene);
-    
+
     // Flipbook
     Flipbook = CreateDefaultSubobject<UPaperFlipbookComponent>(TEXT("Flipbook"));
     Flipbook->SetupAttachment(RootScene);
-    Flipbook->SetRelativeRotation(FRotator(0.f, 0.f, -90.f)); // tourne autour de Z pour l’horizontalité
-    Flipbook->SetRelativeLocation(FVector(0.f, 0.f, 50.f));   // au-dessus du sol
+    Flipbook->SetRelativeRotation(FRotator(0.f, 0.f, -90.f));
+    Flipbook->SetRelativeLocation(FVector(0.f, 0.f, 50.f));
 
     // Mouvement
     ComposantMouvement = CreateDefaultSubobject<UFloatingPawnMovement>(TEXT("Mouvement"));
@@ -33,6 +33,10 @@ AMyPacMan::AMyPacMan()
 void AMyPacMan::BeginPlay()
 {
     Super::BeginPlay();
+    InitialLocation = GetActorLocation();
+
+    if (Flipbook)
+        BaseFlipbook = Flipbook->GetFlipbook();
 }
 
 void AMyPacMan::Tick(float DeltaTime)
@@ -94,21 +98,46 @@ void AMyPacMan::UpdateFlipbookRotation()
 {
     if (!Flipbook) return;
 
-    // Rotation de base : à plat
-    FRotator BaseRotation(0.f, 0.f, -90.f); // met le flipbook horizontal
-
+    FRotator BaseRotation(0.f, 0.f, -90.f);
     FVector Dir = DirectionCourante.GetSafeNormal2D();
     float Yaw = 0.f;
 
-    if (Dir.Equals(FVector::RightVector, 0.1f))        // droite
+    if (Dir.Equals(FVector::RightVector, 0.1f))
         Yaw = 0.f;
-    else if (Dir.Equals(-FVector::RightVector, 0.1f))  // gauche
+    else if (Dir.Equals(-FVector::RightVector, 0.1f))
         Yaw = 180.f;
-    else if (Dir.Equals(FVector::ForwardVector, 0.1f)) // haut
+    else if (Dir.Equals(FVector::ForwardVector, 0.1f))
         Yaw = -90.f;
-    else if (Dir.Equals(-FVector::ForwardVector, 0.1f))// bas
+    else if (Dir.Equals(-FVector::ForwardVector, 0.1f))
         Yaw = 90.f;
 
     BaseRotation.Yaw = Yaw;
     Flipbook->SetRelativeRotation(BaseRotation);
+}
+
+void AMyPacMan::Die()
+{
+    if (ComposantMouvement)
+        ComposantMouvement->StopMovementImmediately();
+
+    if (DeadFlipbook && Flipbook)
+    {
+        Flipbook->SetFlipbook(DeadFlipbook->GetFlipbook());
+        Flipbook->SetLooping(false);
+        Flipbook->Play();
+    }
+
+    GetWorldTimerManager().SetTimer(DeathTimerHandle, this, &AMyPacMan::ResetPosition, 1.0f, false);
+}
+
+void AMyPacMan::ResetPosition()
+{
+    SetActorLocation(InitialLocation);
+
+    if (Flipbook && BaseFlipbook)
+    {
+        Flipbook->SetFlipbook(BaseFlipbook);
+        Flipbook->SetLooping(true);
+        Flipbook->Play();
+    }
 }

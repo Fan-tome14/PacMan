@@ -27,8 +27,13 @@ public:
 
 	void UpdateFlipbookRotation();
 
+	/** Gérer la mort et le reset */
+	void Die();
+	void ResetPosition();
+
 private:
 	FVector DirectionCourante = FVector::ZeroVector;
+	FVector InitialLocation;
 
 	UPROPERTY(VisibleAnywhere)
 	USceneComponent* RootScene;
@@ -40,5 +45,13 @@ private:
 	UPaperFlipbookComponent* Flipbook;
 
 	UPROPERTY(VisibleAnywhere)
+	UPaperFlipbookComponent* DeadFlipbook;
+
+	UPaperFlipbook* BaseFlipbook;
+
+	UPROPERTY(VisibleAnywhere)
 	UFloatingPawnMovement* ComposantMouvement;
+
+	/** Timer handle pour reset après le flipbook mort */
+	FTimerHandle DeathTimerHandle;
 };

@@ -9,4 +9,6 @@ class PACMAN_API AClyde : public AGhost
 	GENERATED_BODY()
 public:
 	AClyde();
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="PacMan")
+	AActor* LeftCornerActor;
 };

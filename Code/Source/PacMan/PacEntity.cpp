@@ -1,4 +1,7 @@
 #include "PacEntity.h"
+
+#include "AIController.h"
+#include "TestAIController.h"
 #include "Components/InputComponent.h"
 #include "Engine/World.h"
 
@@ -23,6 +26,8 @@ APacEntity::APacEntity()
     MoveSpeed = 300.f;
     DirectionCourante = FVector::ForwardVector;
     ProchaineDirection = FVector::ZeroVector;
+
+    InitialLocation=GetActorLocation();
 }
 
 void APacEntity::BeginPlay()
@@ -44,9 +49,6 @@ void APacEntity::Tick(float DeltaTime)
 
     // Déplacement
     AddMovementInput(DirectionCourante, MoveSpeed * DeltaTime);
-
-    // Flipbook
-    UpdateFlipbookOrientation();
 }
 
 void APacEntity::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -83,18 +85,15 @@ bool APacEntity::PeutAller(const FVector& Direction)
     return true; // Pour l’instant toujours possible
 }
 
-void APacEntity::UpdateFlipbookOrientation()
+void APacEntity::ResetPosition()
 {
-    if (!Flipbook) return;
+    SetActorLocation(InitialLocation);
 
-    FVector Dir = DirectionCourante;
-
-    if (Dir.Equals(FVector::RightVector))
-        Flipbook->SetRelativeRotation(FRotator(0.f, 0.f, -90.f));
-    else if (Dir.Equals(-FVector::RightVector))
-        Flipbook->SetRelativeRotation(FRotator(0.f, 180.f, -90.f));
-    else if (Dir.Equals(FVector::ForwardVector))
-        Flipbook->SetRelativeRotation(FRotator(0.f, -90.f, -90.f));
-    else if (Dir.Equals(-FVector::ForwardVector))
-        Flipbook->SetRelativeRotation(FRotator(0.f, 90.f, -90.f));
+    // Si le fantôme a un AIController, reset la navigation
+    ATestAIController* AICon = Cast<ATestAIController>(GetController());
+    if (AICon)
+    {
+        AICon->StopMovement(); // Arrête le mouvement en cours
+    }
 }
+
