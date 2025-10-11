@@ -15,12 +15,19 @@ public:
 	ATestAIController();
 
 protected:
+	// Override pour posséder le Pawn
 	virtual void OnPossess(APawn* InPawn) override;
 
-private:
-	UPROPERTY()
+public:
+	// Permet d'assigner Pac-Man comme cible depuis Blueprint ou Level Blueprint
+	UFUNCTION(BlueprintCallable)
+	void SetTargetActor(AActor* Target);
+
+protected:
+	// Composants du Behavior Tree et Blackboard
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	UBlackboardComponent* BlackboardComponent;
 
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	UBehaviorTreeComponent* BehaviorTreeComponent;
 };
