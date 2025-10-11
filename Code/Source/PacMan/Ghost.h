@@ -35,6 +35,20 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     UPaperFlipbook* FrightenFlipbook;
 
+    // --- Flipbooks directionnels ---
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flipbooks|Directions")
+    UPaperFlipbook* Flipbook_Up;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flipbooks|Directions")
+    UPaperFlipbook* Flipbook_Down;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flipbooks|Directions")
+    UPaperFlipbook* Flipbook_Left;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flipbooks|Directions")
+    UPaperFlipbook* Flipbook_Right;
+
+
     // --- Behavior Tree ---
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     UBehaviorTree* TreeAsset;

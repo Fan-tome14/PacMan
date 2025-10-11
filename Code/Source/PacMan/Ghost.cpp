@@ -226,12 +226,37 @@ void AGhost::UpdateFlipbookFromVelocity()
 
     FVector Dir = Vel.GetSafeNormal2D();
 
-    if (Dir.Equals(FVector::RightVector, 0.1f))
-        Flipbook->SetRelativeRotation(FRotator(0.f, 0.f, -90.f));
-    else if (Dir.Equals(-FVector::RightVector, 0.1f))
-        Flipbook->SetRelativeRotation(FRotator(0.f, 180.f, -90.f));
-    else if (Dir.Equals(FVector::ForwardVector, 0.1f))
-        Flipbook->SetRelativeRotation(FRotator(0.f, -90.f, -90.f));
-    else if (Dir.Equals(-FVector::ForwardVector, 0.1f))
-        Flipbook->SetRelativeRotation(FRotator(0.f, 90.f, -90.f));
+    // Détermination de la direction dominante
+    if (FMath::Abs(Dir.X) > FMath::Abs(Dir.Y))
+    {
+        // Gauche / Droite
+        if (Dir.X > 0.1f)
+        {
+            if (Flipbook_Right) Flipbook->SetFlipbook(Flipbook_Right);
+            Flipbook->SetRelativeRotation(FRotator(0.f, 0.f, -90.f));
+        }
+        else if (Dir.X < -0.1f)
+        {
+            if (Flipbook_Left) Flipbook->SetFlipbook(Flipbook_Left);
+            Flipbook->SetRelativeRotation(FRotator(0.f, 180.f, -90.f));
+        }
+    }
+    else
+    {
+        // Haut / Bas
+        if (Dir.Y > 0.1f)
+        {
+            if (Flipbook_Up) Flipbook->SetFlipbook(Flipbook_Up);
+            Flipbook->SetRelativeRotation(FRotator(0.f, -90.f, -90.f));
+        }
+        else if (Dir.Y < -0.1f)
+        {
+            if (Flipbook_Down) Flipbook->SetFlipbook(Flipbook_Down);
+            Flipbook->SetRelativeRotation(FRotator(0.f, 90.f, -90.f));
+        }
+    }
+
+    Flipbook->SetLooping(true);
+    Flipbook->Play();
 }
+
