@@ -5,6 +5,7 @@
 #include "AIController.h"
 #include "PacMan/MyPacMan.h"
 #include "Blinky.h"
+#include "EngineUtils.h"
 #include "NavigationSystem.h"
 #include "NavigationPath.h"
 
@@ -24,22 +25,28 @@ EBTNodeResult::Type UBTTask_UpdateTricksterTarget::ExecuteTask(UBehaviorTreeComp
     UBlackboardComponent* BB = OwnerComp.GetBlackboardComponent();
     if (!BB) return EBTNodeResult::Failed;
 
-    AMyPacMan* Player = Cast<AMyPacMan>(UGameplayStatics::GetActorOfClass(Trickster->GetWorld(), AMyPacMan::StaticClass()));
+    // Récupérer Pac-Man via TActorIterator pour plus de sécurité
+    AMyPacMan* Player = nullptr;
+    for (TActorIterator<AMyPacMan> It(Trickster->GetWorld()); It; ++It)
+    {
+        Player = *It;
+        break;
+    }
     if (!Player) return EBTNodeResult::Failed;
 
-    ABlinky* Blinky = Cast<ABlinky>(UGameplayStatics::GetActorOfClass(Trickster->GetWorld(), ABlinky::StaticClass()));
+    // Récupérer Blinky
+    ABlinky* Blinky = nullptr;
+    for (TActorIterator<ABlinky> It(Trickster->GetWorld()); It; ++It)
+    {
+        Blinky = *It;
+        break;
+    }
 
     FVector TargetLoc;
-
     if (Blinky)
     {
-        // 2 cases devant Pac-Man
         FVector PacFront = Player->GetActorLocation() + Player->GetActorForwardVector() * (2 * TileSize);
-
-        // Vecteur vers Blinky
         FVector Vec = PacFront - Blinky->GetActorLocation();
-
-        // Target finale pour Trickster (Inky)
         TargetLoc = Blinky->GetActorLocation() + Vec * 2;
     }
     else
@@ -47,22 +54,23 @@ EBTNodeResult::Type UBTTask_UpdateTricksterTarget::ExecuteTask(UBehaviorTreeComp
         TargetLoc = Player->GetActorLocation();
     }
 
-    // ⚡ S'assurer que la target reste sur le NavMesh
-    UNavigationSystemV1* NavSys = FNavigationSystem::GetCurrent<UNavigationSystemV1>(Trickster->GetWorld());
+    // Vérifier que la position est sur le NavMesh
+    UNavigationSystemV1* NavSys = UNavigationSystemV1::GetCurrent(Trickster->GetWorld());
     if (NavSys)
     {
         FNavLocation NavLoc;
         if (NavSys->ProjectPointToNavigation(TargetLoc, NavLoc, FVector(MaxNavOffset, MaxNavOffset, MaxNavOffset)))
         {
-            OwnerComp.GetBlackboardComponent()->SetValueAsVector(TargetLocation.SelectedKeyName, NavLoc.Location);
-
+            BB->SetValueAsVector("TargetLocation", NavLoc.Location); // clé hardcodée comme FindFrightened
         }
         else
         {
-            OwnerComp.GetBlackboardComponent()->SetValueAsVector(TargetLocation.SelectedKeyName, Player->GetActorLocation());
+            BB->SetValueAsVector("TargetLocation", Player->GetActorLocation());
         }
+
         return EBTNodeResult::Succeeded;
     }
 
     return EBTNodeResult::Failed;
 }
+
